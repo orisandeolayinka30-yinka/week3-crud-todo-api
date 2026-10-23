@@ -14,7 +14,11 @@ app.get('/todos', (req, res) => {
 
 // POST New – Create
 app.post('/todos', (req, res) => {
-  const newTodo = { id: todos.length + 1, ...req.body }; // Auto-ID
+  const { task } = req.body;
+  if (!task || typeof task !== 'string' || !task.trim()) {
+    return res.status(400).json({ error: '"task" field is required' });
+  }
+  const newTodo = { id: todos.length + 1, task: task.trim(), completed: false }; // Auto-ID
   todos.push(newTodo);
   res.status(201).json(newTodo); // Echo back
 });
@@ -40,6 +44,18 @@ app.delete('/todos/:id', (req, res) => {
 app.get('/todos/completed', (req, res) => {
   const completed = todos.filter((t) => t.completed);
   res.json(completed); // Custom Read!
+});
+// Bonus: active todos (not completed)
+app.get('/todos/active', (req, res) => {
+  const active = todos.filter((t) => !t.completed);
+  res.status(200).json(active);
+});
+
+// Single read by id
+app.get('/todos/:id', (req, res) => {
+  const todo = todos.find((t) => t.id === parseInt(req.params.id));
+  if (!todo) return res.status(404).json({ message: 'Todo not found' });
+  res.status(200).json(todo);
 });
 
 app.use((err, req, res, next) => {
